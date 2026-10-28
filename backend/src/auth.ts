@@ -15,8 +15,8 @@ export function issueSession(res: Response, user: SessionUser) {
   const secure = config.NODE_ENV === "production";
   // Session-only cookies intentionally expire when the browser session closes.
   // There is no persistent "remember me" or automatic-login credential.
-  res.cookie("qm_session", token, { httpOnly: true, secure, sameSite: "strict", path: "/" });
-  res.cookie("qm_csrf", csrf, { httpOnly: false, secure, sameSite: "strict", path: "/" });
+res.cookie("qm_session", token, { httpOnly: true, secure, sameSite: "none", path: "/" });
+res.cookie("qm_csrf", csrf, { httpOnly: false, secure, sameSite: "none", path: "/" });
 }
 
 export function clearSession(res: Response) {

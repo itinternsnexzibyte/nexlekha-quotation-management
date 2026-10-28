@@ -4,7 +4,7 @@ import {LayoutDashboard,FilePlus2,Files,Users,Package,ShieldCheck,LogOut,Search,
 import "./styles.css";
 import PlatformSwitch from "./PlatformSwitch";
 
-const API=import.meta.env.VITE_API_URL||"http://localhost:4000/api";
+const API=import.meta.env.VITE_API_URL||"https://nexlekha-quotation-management.onrender.com/api";
 const apiAsset=(path:string)=>API.startsWith("http")?`${API.replace(/\/api$/,"")}${path}`:path;
 const useEffect=(effect:()=>unknown,deps:React.DependencyList)=>reactUseEffect(()=>{effect()},deps);
 const cookie=(name:string)=>document.cookie.split("; ").find(v=>v.startsWith(name+"="))?.split("=")[1]||"";
