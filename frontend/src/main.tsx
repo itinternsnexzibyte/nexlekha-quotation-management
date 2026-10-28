@@ -77,7 +77,7 @@ return <div className="app-shell"><aside className={mobile?"sidebar open":"sideb
 <div className="topbar-actions">{currentUser.role!=="VIEWER"&&<button className="primary topbar-new" onClick={()=>navigate("create")}><Plus size={16}/>New quotation</button>}<div className="secure-chip"><ShieldCheck size={16}/> Protected session</div></div></header>
 <div className={inQuotation?"content quotation-workspace":"content"}>
 {inQuotation&&<div className="quotation-tabs"><div className="qt-main"><div className="qt-title"><span className="eyebrow">COMMERCIAL WORKSPACE</span><h3>Quotations</h3></div><div className="quotation-tab-actions"><button className={page==="history"?"quotation-tab active":"quotation-tab"} onClick={()=>openRegister()}><Files size={16}/>Quotation register<em>{counts.ALL??0}</em></button>{currentUser.role!=="VIEWER"&&<button className={page==="create"?"quotation-tab active":"quotation-tab"} onClick={()=>navigate("create")}><FilePlus2 size={16}/>New quotation</button>}</div></div>{page==="history"&&<div className="qt-filters">{statusChips.map(c=><button key={c.key} className={preset.status===c.value?"chip active":"chip"} onClick={()=>openRegister(c.value)}>{c.label}<em>{counts[c.key]??0}</em></button>)}</div>}</div>}
-{page==="dashboard"&&<Dashboard onCreate={()=>navigate("create")}/>} {page==="create"&&currentUser.role!=="VIEWER"&&<QuotationEditor key={editId||"new"} user={currentUser} quotationId={editId} onSaved={()=>openRegister()}/>} {page==="history"&&<History key={regKey} user={currentUser} onEdit={editQuotation} preset={preset}/>} {page==="customers"&&<Customers/>} {page==="products"&&<Products user={currentUser}/>} {page==="pricingRules"&&<PricingRules/>} {page==="reports"&&<Reports/>} {page==="templates"&&<Templates/>} {page==="users"&&<UserManagement/>} {page==="audit"&&<Audit/>} {page==="settings"&&<Settings user={currentUser} onUpdated={setCurrentUser} onLogout={onLogout}/>}</div></main>{mobile&&<div className="scrim" onClick={()=>setMobile(false)}/>}</div>}
+{page==="dashboard"&&<Dashboard onCreate={()=>navigate("create")}/>} {page==="create"&&currentUser.role!=="VIEWER"&&<QuotationEditor key={editId||"new"} user={currentUser} quotationId={editId} onSaved={()=>openRegister()}/>} {page==="history"&&<History key={regKey} user={currentUser} onEdit={editQuotation} preset={preset}/>} {page==="customers"&&<Customers user={currentUser}/>} {page==="products"&&<Products user={currentUser}/>} {page==="pricingRules"&&<PricingRules/>} {page==="reports"&&<Reports/>} {page==="templates"&&<Templates/>} {page==="users"&&<UserManagement/>} {page==="audit"&&<Audit/>} {page==="settings"&&<Settings user={currentUser} onUpdated={setCurrentUser} onLogout={onLogout}/>}</div></main>{mobile&&<div className="scrim" onClick={()=>setMobile(false)}/>}</div>}
 
 function Dashboard({onCreate}:{onCreate:()=>void}){const[documents,setDocuments]=useState({profileCard:false,brochure:false});const[data,setData]=useState<any>();useEffect(()=>{api("/dashboard").then(setData);api("/company-documents").then(setDocuments).catch(()=>{})},[]);if(!data)return <Loader/>;const statusCount=(name:string)=>data.statusBreakdown.find((s:any)=>s.status===name)?._count._all||0;const issued=statusCount("ISSUED"),drafts=statusCount("DRAFT"),revised=statusCount("REVISED"),cancelled=statusCount("CANCELLED");const total=Math.max(data.quotationCount,1),maxValue=Math.max(...data.monthlyTrend.map((x:any)=>x.value),1);return <><section className="hero"><div><span className="eyebrow">QUOTATION CONTROL CENTRE</span><h1>Clear proposals.<br/>Confident decisions.</h1><p>A focused view of quotation value, client activity and commercial progress.</p></div><div className="hero-actions"><button className="secondary document-button" onClick={()=>window.open(`${API}/company/profile-card`,"_blank")} disabled={!documents.profileCard}><FileText size={18}/>Profile card</button><button className="secondary document-button" onClick={()=>window.open(`${API}/company/brochure`,"_blank")} disabled={!documents.brochure}><Download size={18}/>Brochure</button><button className="primary" onClick={onCreate}><Plus size={18}/>New quotation</button></div></section><section className="metrics"><Metric icon={Files} label="Total quotations" value={data.quotationCount}/><Metric icon={CheckCircle2} label="Issued quotations" value={issued}/><Metric icon={Building2} label="Active customers" value={data.customerCount}/><Metric icon={IndianRupee} label="Issued value" value={money(data.issuedValue)}/></section><section className="analytics-grid"><article className="panel chart-card"><div className="panel-title"><div><h3>Quotation value trend</h3><p>Commercial value created during the last six months</p></div><span className="chart-badge">6 months</span></div><div className="bar-chart">{data.monthlyTrend.map((x:any)=><div className="bar-column" key={x.month}><div className="bar-value">{x.value?money(x.value).replace("₹","₹"):"—"}</div><div className="bar-track"><div className="bar-fill" style={{height:`${Math.max(x.value/maxValue*100,x.value?8:2)}%`}}><span>{x.count}</span></div></div><small>{x.month}</small></div>)}</div></article><article className="panel mix-card"><div className="panel-title"><div><h3>Quotation mix</h3><p>Current workspace status</p></div></div><div className="mix-body"><div className="donut" style={{background:`conic-gradient(#1f4fd8 0 ${issued/total*100}%,#6c97f3 ${issued/total*100}% ${(issued+revised)/total*100}%,#f5b942 ${(issued+revised)/total*100}% ${(issued+revised+drafts)/total*100}%,#ef6a79 ${(issued+revised+drafts)/total*100}% 100%)`}}><div><strong>{data.quotationCount}</strong><span>Total</span></div></div><div className="legend"><span><i className="issued-dot"/>Issued <b>{issued}</b></span><span><i className="revised-dot"/>Revised <b>{revised}</b></span><span><i className="draft-dot"/>Draft <b>{drafts}</b></span><span><i className="cancelled-dot"/>Cancelled <b>{cancelled}</b></span></div></div></article></section><section className="panel recent-panel"><div className="panel-title"><div><h3>Recent activity</h3><p>Latest quotation records across the workspace</p></div><button className="secondary" onClick={onCreate}><Plus size={16}/>Create</button></div><div className="table-scroll"><table><thead><tr><th>Quotation</th><th>Customer</th><th>Owner</th><th>Status</th><th>Total</th></tr></thead><tbody>{data.recent.map((q:any)=><tr key={q.id}><td><strong>{q.quotationNumber}</strong></td><td>{q.customer.companyName}</td><td>{q.createdBy.name}</td><td><Status value={q.status}/></td><td>{money(q.grandTotal)}</td></tr>)}</tbody></table></div>{!data.recent.length&&<Empty text="No quotations yet. Create the first controlled quotation."/>}</section></>}
 function Metric({icon:Icon,label,value}:any){return <article className="metric"><div className="metric-icon"><Icon size={20}/></div><span>{label}</span><strong>{value}</strong></article>}
@@ -118,7 +118,82 @@ function Total({label,value}:any){return <div className="total"><span>{label}</s
 
 function History({user,onEdit,preset}:{user:User;onEdit:(id:string)=>void;preset?:{q:string;status:string}}){const[rows,setRows]=useState<any[]>([]),[filters,setFilters]=useState({q:preset?.q||"",status:preset?.status||"",from:"",to:"",product:""});const[loading,setLoading]=useState(false);async function load(){setLoading(true);const p=new URLSearchParams(filters);setRows(await api(`/quotations?${p}`));setLoading(false)}useEffect(()=>{load()},[]);async function download(id:string){const r=await fetch(`${API}/quotations/${id}/pdf`,{credentials:"include"});if(!r.ok)return alert("Download failed");const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="final-secure-quotation.pdf";a.click();URL.revokeObjectURL(url)}async function preview(id:string){window.open(`${API}/quotations/${id}/preview`,"_blank","noopener,noreferrer")}async function edit(x:any){try{if(x.status==="DRAFT")return onEdit(x.id);const copy=await api(`/quotations/${x.id}/revise`,{method:"POST"});onEdit(copy.id)}catch(e:any){alert(e.message)}}async function cancel(id:string){if(confirm("Cancel this quotation?")){await api(`/quotations/${id}/status`,{method:"PATCH",body:JSON.stringify({status:"CANCELLED"})});load()}}return <section className="panel"><div className="panel-title"><div><h3>Quotation register</h3><p>Open the PDF-style document editor inside the website. Client downloads are flattened and non-editable.</p></div><button className="secondary" onClick={load}><Search size={16}/>Apply filters</button></div><div className="filter-grid"><input value={filters.q} onChange={e=>setFilters({...filters,q:e.target.value})} placeholder="Number, customer or subject"/><select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{["DRAFT","ISSUED","REVISED","CANCELLED"].map(x=><option key={x}>{x}</option>)}</select><input value={filters.product} onChange={e=>setFilters({...filters,product:e.target.value})} placeholder="Product"/><input type="date" value={filters.from} onChange={e=>setFilters({...filters,from:e.target.value})}/><input type="date" value={filters.to} onChange={e=>setFilters({...filters,to:e.target.value})}/></div>{loading?<Loader/>:<table><thead><tr><th>Number</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead><tbody>{rows.map(x=><tr key={x.id}><td><strong>{x.quotationNumber}</strong></td><td>{x.customer.companyName}</td><td>{new Date(x.quotationDate).toLocaleDateString("en-IN")}</td><td><Status value={x.status}/></td><td>{money(x.grandTotal)}</td><td className="actions"><button title="View the final PDF layout" onClick={()=>preview(x.id)}><Eye size={16}/>Preview</button><button title="Download a flattened, non-editable PDF" onClick={()=>download(x.id)}><Download size={16}/>Secure PDF</button>{user.role!=="VIEWER"&&x.status!=="CANCELLED"&&x.status!=="REVISED"&&<button className="edit-action" onClick={()=>edit(x)}><Pencil size={16}/>{x.status==="DRAFT"?"Edit PDF document":"Revise PDF document"}</button>}{user.role==="ADMIN"&&x.status!=="CANCELLED"&&<button onClick={()=>cancel(x.id)}>Cancel</button>}</td></tr>)}</tbody></table>}{!rows.length&&!loading&&<Empty text="No matching quotations found."/>}</section>}
 
-function Customers(){const[rows,setRows]=useState<any[]>([]),[open,setOpen]=useState(false),[form,setForm]=useState<any>({customerCode:"",companyName:"",address:"",gstNo:"",contact:{name:"",email:"",phone:"",designation:""}});const load=()=>api("/customers").then(setRows);useEffect(load,[]);async function save(e:React.FormEvent){e.preventDefault();await api("/customers",{method:"POST",body:JSON.stringify(form)});setOpen(false);load()}return <section className="panel"><div className="panel-title"><div><h3>Customer master</h3><p>Company defaults and named contacts used in quotations.</p></div><button className="primary" onClick={()=>setOpen(!open)}><Plus size={17}/>New customer</button></div>{open&&<form className="inline-form" onSubmit={save}><input placeholder="Customer code" required onChange={e=>setForm({...form,customerCode:e.target.value})}/><input placeholder="Company name" required onChange={e=>setForm({...form,companyName:e.target.value})}/><input placeholder="GSTIN" onChange={e=>setForm({...form,gstNo:e.target.value})}/><input placeholder="Address" required onChange={e=>setForm({...form,address:e.target.value})}/><input placeholder="Contact name" required onChange={e=>setForm({...form,contact:{...form.contact,name:e.target.value}})}/><input type="email" placeholder="Contact email" onChange={e=>setForm({...form,contact:{...form.contact,email:e.target.value}})}/><button className="primary">Save customer</button></form>}<div className="cards">{rows.map(c=><article className="record-card" key={c.id}><div className="record-icon"><Building2/></div><div><strong>{c.companyName}</strong><span>{c.customerCode} · {c.gstNo||"GSTIN not set"}</span><small>{c.address}</small></div><span>{c.contacts.length} contact{c.contacts.length===1?"":"s"}</span></article>)}</div></section>}
+
+function Customers({user}:{user:User}) {
+  const [rows,setRows]=useState<any[]>([]);
+  const [open,setOpen]=useState(false);
+  const [error,setError]=useState("");
+  const [form,setForm]=useState<any>({
+    customerCode:"",
+    companyName:"",
+    address:"",
+    gstNo:"",
+    contact:{name:"",email:"",phone:"",designation:""}
+  });
+
+  const load=()=>api("/customers").then(setRows);
+  useEffect(()=>{load()},[]);
+
+  async function save(e:React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    try {
+      await api("/customers",{method:"POST",body:JSON.stringify(form)});
+      setOpen(false);
+      await load();
+    } catch(err:any) {
+      setError(err.message || "Unable to save customer");
+    }
+  }
+
+  async function removeCustomer(c:any) {
+    if (!window.confirm(`Delete customer "${c.companyName}"?`)) return;
+    setError("");
+    try {
+      await api(`/customers/${c.id}`,{method:"DELETE"});
+      await load();
+    } catch(err:any) {
+      setError(err.message || "Unable to delete customer");
+    }
+  }
+
+  return <section className="panel">
+    <div className="panel-title">
+      <div>
+        <h3>Customer master</h3>
+        <p>Company defaults and named contacts used in quotations.</p>
+      </div>
+      <button className="primary" onClick={()=>setOpen(!open)}>
+        <Plus size={17}/>New customer
+      </button>
+    </div>
+
+    {error && <p role="alert">{error}</p>}
+
+    {open && <form className="inline-form" onSubmit={save}>
+      <input placeholder="Customer code" required onChange={e=>setForm({...form,customerCode:e.target.value})}/>
+      <input placeholder="Company name" required onChange={e=>setForm({...form,companyName:e.target.value})}/>
+      <input placeholder="GSTIN" onChange={e=>setForm({...form,gstNo:e.target.value})}/>
+      <input placeholder="Address" required onChange={e=>setForm({...form,address:e.target.value})}/>
+      <input placeholder="Contact name" required onChange={e=>setForm({...form,contact:{...form.contact,name:e.target.value}})}/>
+      <input type="email" placeholder="Contact email" onChange={e=>setForm({...form,contact:{...form.contact,email:e.target.value}})}/>
+      <button className="primary">Save customer</button>
+    </form>}
+
+    <div className="cards">
+      {rows.map(c=><article className="record-card" key={c.id}>
+        <div className="record-icon"><Building2/></div>
+        <div>
+          <strong>{c.companyName}</strong>
+          <span>{c.customerCode} · {c.gstNo||"GSTIN not set"}</span>
+          <small>{c.address}</small>
+        </div>
+        <span>{c.contacts.length} contact{c.contacts.length===1?"":"s"}</span>
+        {user.role==="ADMIN" && <button type="button" className="secondary" onClick={()=>removeCustomer(c)}>Delete</button>}
+      </article>)}
+    </div>
+  </section>;
+}
 
 const PRODUCT_IMAGE_KEYS=["laptop","keyboard","mouse","desktop","monitor","ssd","ram","dock","ups","software-office","software-security","software-os","generic"];
 const productImage=(p:any)=>p?.imageUrl?apiAsset(p.imageUrl):`/assets/products/${p?.imageKey&&PRODUCT_IMAGE_KEYS.includes(p.imageKey)?p.imageKey:"generic"}.png`;

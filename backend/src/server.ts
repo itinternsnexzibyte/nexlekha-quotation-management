@@ -126,6 +126,27 @@ app.put("/api/customers/:id", requireRole("ADMIN","QUOTATION_USER"), asyncRoute(
   const input=z.object({companyName:z.string().min(2).max(160),address:z.string().min(5).max(1000),gstNo:z.string().max(30).nullable().optional(),defaultPaymentTerms:z.string().max(500),defaultDeliveryTerms:z.string().max(500),status:z.enum(["ACTIVE","INACTIVE"]).optional()}).parse(req.body);
   const row=await db.customer.update({where:{id:req.params.id},data:input});await audit(req,"UPDATE","Customer",row.id);res.json(row);
 }));
+
+app.delete("/api/customers/:id", requireRole("ADMIN"), asyncRoute(async (req:any, res:any) => {
+  const customer = await db.customer.findUnique({
+    where: { id: req.params.id },
+    include: { _count: { select: { quotations: true } } }
+  });
+
+  if (!customer) {
+    return res.status(404).json({ message: "Customer not found" });
+  }
+
+  if (customer._count.quotations > 0) {
+    return res.status(409).json({
+      message: "This customer has quotations and cannot be deleted."
+    });
+  }
+
+  await db.customer.delete({ where: { id: customer.id } });
+  await audit(req, "CUSTOMER_DELETED", "Customer", customer.id);
+  res.json({ ok: true });
+}));
 app.post("/api/customers/:id/contacts", requireRole("ADMIN","QUOTATION_USER"), asyncRoute(async (req:any,res:any)=>{
   const input=z.object({name:z.string().min(2).max(100),designation:z.string().max(100).optional(),phone:z.string().max(30).optional(),email:z.string().email().optional()}).parse(req.body);
   const row=await db.customerContact.create({data:{customerId:req.params.id,...input}});await audit(req,"CREATE","CustomerContact",row.id);res.status(201).json(row);
