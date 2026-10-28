@@ -1,0 +1,15 @@
+/* Platform switch: sliding two-segment toggle shown above both login forms. */
+.ps{--ps-sales:linear-gradient(135deg,#0d5b3b,#1d8a5a);--ps-quotation:linear-gradient(135deg,#3b2230,#7a4a5c);position:relative;display:inline-grid;grid-template-columns:1fr 1fr;align-items:stretch;padding:4px;margin:0 auto 18px;border-radius:999px;background:#ffffffee;border:1px solid #dde3ee;box-shadow:0 10px 30px #16233b1a,inset 0 1px 0 #fff;isolation:isolate;max-width:100%}
+.ps-thumb{position:absolute;z-index:-1;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:var(--ps-sales);box-shadow:0 6px 16px #0d5b3b40;transition:transform .34s cubic-bezier(.65,0,.25,1),background .34s,box-shadow .34s}
+.ps-quotation .ps-thumb{transform:translateX(100%);background:var(--ps-quotation);box-shadow:0 6px 16px #3b223045}
+.ps-opt{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border-radius:999px;color:#5b6678;text-align:center;transition:color .25s,transform .15s;white-space:nowrap}
+.ps-opt:hover{color:#16233b}.ps-opt:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+.ps-opt.ps-active,.ps-opt.ps-active:hover{color:#fff}
+.ps-text{display:grid;gap:1px;line-height:1.15}.ps-text strong{font:700 13px/1.15 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.01em}.ps-text small{font:600 9.5px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.ps-arrow{flex:none;animation:ps-nudge 1.6s ease-in-out infinite}
+.ps-quotation .ps-opt:first-of-type .ps-arrow{transform:scaleX(-1);animation-name:ps-nudge-back}
+@keyframes ps-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes ps-nudge-back{0%,100%{transform:scaleX(-1) translateX(0)}50%{transform:scaleX(-1) translateX(4px)}}
+.ps-going .ps-arrow{animation:none}
+@media(max-width:480px){.ps-opt{padding:8px 10px}.ps-text strong{font-size:11.5px}.ps-text small{display:none}}
+@media(prefers-reduced-motion:reduce){.ps-thumb,.ps-opt{transition:none}.ps-arrow{animation:none}}
