@@ -16,19 +16,26 @@ async function api(path:string,options:RequestInit={}) {
     ...(options.headers || {})
   };
 
-  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
-    if (!csrfToken) {
-      const tokenResponse = await fetch(API + "/auth/csrf", {
-        credentials: "include"
-      });
-      const tokenData = await tokenResponse.json();
-      if (!tokenResponse.ok || !tokenData.csrfToken) {
-        throw new Error("Unable to retrieve security token. Please log in again.");
-      }
-      csrfToken = tokenData.csrfToken;
+ if (
+  !["GET", "HEAD", "OPTIONS"].includes(method) &&
+  !path.startsWith("/auth/login") &&
+  !path.startsWith("/setup/bootstrap")
+) {
+  if (!csrfToken) {
+    const tokenResponse = await fetch(API + "/auth/csrf", {
+      credentials: "include"
+    });
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok || !tokenData.csrfToken) {
+      throw new Error("Unable to retrieve security token. Please log in again.");
     }
-    headers["x-csrf-token"] = csrfToken;
+
+    csrfToken = tokenData.csrfToken;
   }
+
+  headers["x-csrf-token"] = csrfToken;
+}
 
   const r = await fetch(API + path, {
     ...options,
