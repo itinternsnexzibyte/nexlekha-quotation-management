@@ -7,8 +7,44 @@ import PlatformSwitch from "./PlatformSwitch";
 const API=import.meta.env.VITE_API_URL||"https://nexlekha-quotation-management.onrender.com/api";
 const apiAsset=(path:string)=>API.startsWith("http")?`${API.replace(/\/api$/,"")}${path}`:path;
 const useEffect=(effect:()=>unknown,deps:React.DependencyList)=>reactUseEffect(()=>{effect()},deps);
-const cookie=(name:string)=>document.cookie.split("; ").find(v=>v.startsWith(name+"="))?.split("=")[1]||"";
-async function api(path:string,options:RequestInit={}){const headers:any={"Content-Type":"application/json",...(options.headers||{})};if(!["GET","HEAD"].includes(options.method||"GET"))headers["x-csrf-token"]=cookie("qm_csrf");const r=await fetch(API+path,{...options,headers,credentials:"include"});if(r.status===204)return null;const ct=r.headers.get("content-type")||"";const data=ct.includes("json")?await r.json():await r.blob();if(!r.ok)throw new Error(data?.message||"Request failed");return data;}
+let csrfToken = "";
+
+async function api(path:string,options:RequestInit={}) {
+  const method = (options.method || "GET").toUpperCase();
+  const headers:any = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    if (!csrfToken) {
+      const tokenResponse = await fetch(API + "/auth/csrf", {
+        credentials: "include"
+      });
+      const tokenData = await tokenResponse.json();
+      if (!tokenResponse.ok || !tokenData.csrfToken) {
+        throw new Error("Unable to retrieve security token. Please log in again.");
+      }
+      csrfToken = tokenData.csrfToken;
+    }
+    headers["x-csrf-token"] = csrfToken;
+  }
+
+  const r = await fetch(API + path, {
+    ...options,
+    headers,
+    credentials: "include"
+  });
+
+  if (r.status === 204) return null;
+
+  const ct = r.headers.get("content-type") || "";
+  const data = ct.includes("json") ? await r.json() : await r.blob();
+
+  if (!r.ok) throw new Error(data?.message || "Request failed");
+
+  return data;
+}
 const money=(v:any)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(v||0));
 const small=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],decades=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
 function underThousand(n:number){const w:string[]=[];if(n>=100){w.push(`${small[Math.floor(n/100)]} Hundred`);n%=100}if(n>=20){w.push(decades[Math.floor(n/10)]!);if(n%10)w.push(small[n%10]!)}else if(n)w.push(small[n]!);return w.join(" ")}

@@ -75,6 +75,9 @@ app.post("/api/auth/login", loginLimiter, asyncRoute(async (req:any,res:any)=>{
 }));
 app.post("/api/auth/logout", requireAuth, requireCsrf, asyncRoute(async (req:any,res:any)=>{await audit(req,"LOGOUT","Session");clearSession(res);res.status(204).end();}));
 app.get("/api/auth/me", requireAuth, (req,res)=>res.json({user:req.user}));
+app.get("/api/auth/csrf", requireAuth, (req:any,res:any) => {
+  res.json({ csrfToken: String(req.cookies?.qm_csrf || "") });
+});
 
 app.use("/api", requireAuth, requireCsrf);
 
